@@ -11,4 +11,3 @@ psycopg2-binary
 pydantic[email]
 fastapi_mail
 redis
-hashlib
