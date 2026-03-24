@@ -5,7 +5,7 @@ from router.project import project1
 from router.task import task_router
 from contextlib import asynccontextmanager
 from database.db import create_db
-import database.Model
+
 @asynccontextmanager
 async def lifespan(app : FastAPI):
     create_db()

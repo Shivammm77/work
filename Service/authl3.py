@@ -25,7 +25,7 @@ config = ConnectionConfig(
 )
 async def send_welcome_email(email: str, username: str):
     html = f"""
-   
+   hey {username} Welcome to the community 
     """
     
     message = MessageSchema(
@@ -50,6 +50,7 @@ def create_token(user_id:int , username  , exp : timedelta):
     return jwt.encode(encode , Secret_Key , algorithm=alg)
 
 def create_user(user : user , db : Session):
+ try :
     new_user = User(
         username = user.name,
         email = user.email,
@@ -60,6 +61,10 @@ def create_user(user : user , db : Session):
     db.commit()
     db.refresh(new_user)
     return new_user
+ except Exception as e:
+        print(f"ERROR OCCURRED: {e}") # This WILL show up in Render logs
+        raise HTTPException(status_code=500, detail=str(e))
+
     
 def getcurrentuser(token  : Session = Depends(oauth2)):
     

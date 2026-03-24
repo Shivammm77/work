@@ -8,8 +8,7 @@ from database.Schema.schema import user
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 from Service.authl3 import authenticate_user , create_token , create_user ,send_welcome_email
-import redis
-import time
+
 from fastapi import Request
 from fastapi import status
 
