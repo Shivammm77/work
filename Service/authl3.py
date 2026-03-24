@@ -49,31 +49,23 @@ def create_token(user_id:int , username  , exp : timedelta):
     encode.update({'exp':expire})
     return jwt.encode(encode , Secret_Key , algorithm=alg)
 
+def create_user(user : user , db : Session):
+ try :
+    new_user = User(
+        username = user.name,
+        email = user.email,
+        password = bcrypt.hash(user.password),
+        create_at = user.created_at
+   )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+ except Exception as e:
+        print(f"DATABASE ERROR: {str(e)}") # LOOK FOR THIS IN RENDER LOGS
+        db.rollback() # Always rollback on error to prevent idle transactions
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
-def create_user(user_data: user, db: Session):
-    try:
-        # Explicitly convert to string to avoid bcrypt type-mismatch errors
-        plain_password = str(user_data.password)
-        hashed_password = bcrypt.hash(plain_password)
-
-        new_user = User(
-            username=user_data.name,
-            email=user_data.email,
-            password=hashed_password,
-            # Ensure 'create_at' exists in your SQLAlchemy Model
-            # If the model uses 'created_at', change it here!
-            create_at=user_data.created_at 
-        )
-        
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        return new_user
-
-    except Exception as e:
-        db.rollback() # VERY IMPORTANT: Resets the connection for the next request
-        print(f"DATABASE ERROR: {str(e)}") 
-        raise HTTPException(status_code=500, detail=f"Creation failed: {str(e)}")
     
 def getcurrentuser(token  : Session = Depends(oauth2)):
     
