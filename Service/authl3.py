@@ -57,6 +57,8 @@ def create_user(user : user , db : Session):
         password = bcrypt.hash(user.password),
         create_at = user.created_at
    )
+    print("RAW PASSWORD:", user.password)
+    print("PASSWORD LENGTH:", len(user.password.encode("utf-8")))
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
