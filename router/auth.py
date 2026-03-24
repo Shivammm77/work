@@ -43,6 +43,6 @@ def Signup(user_data: user, background_tasks: BackgroundTasks, db: Session = Dep
     new_user = create_user(user_data, db)
     
     # 3. Add background task using the data from the newly created DB object
-    background_tasks.add_task(send_welcome_email, new_user.email, new_user.username)
+    # background_tasks.add_task(send_welcome_email, new_user.email, new_user.username)
     
     return new_user

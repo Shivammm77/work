@@ -11,8 +11,8 @@ from jose import jwt , JWTError
 from fastapi_mail import FastMail , MessageSchema , ConnectionConfig , MessageType
 alg = "HS256"
 Secret_Key = "Shivam"
-bcrypt = CryptContext(schemes=['bcrypt'] , deprecated = ['auto'])
-oauth2 = OAuth2PasswordBearer(tokenUrl="/v1/api/auth/login")
+bcrypt = CryptContext(schemes=['bcrypt'] , deprecated = 'auto')
+oauth2 = OAuth2PasswordBearer(tokenUrl="/auth/login")
 config = ConnectionConfig(
     MAIL_USERNAME = "sonishivam12356@gmail.com",
     MAIL_PASSWORD = "hwbekqutpunqxrch",

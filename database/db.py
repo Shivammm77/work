@@ -20,10 +20,10 @@ def get_db():
 def create_db():
     Base.metadata.create_all(bind = engine)
     
+create_db()     
+
+
      
-
-
-    create_db()   
             
 
            
