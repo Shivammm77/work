@@ -27,17 +27,7 @@ def login(formdata :OAuth2PasswordRequestForm = Depends(), db: Session =Depends(
         
     }
 
-@auth.post("/Signup")
-def Signup(username : user , background_tasks : BackgroundTasks,db : Session=Depends(get_db) ):
-    new_user = create_user(username , db)
-    # we stop here and don't add the background task.
-    if not new_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User already registered"
-        )
-    background_tasks.add_task(send_welcome_email , new_user.email , new_user.username)
-    return new_user
+
 @auth.post("/Signup")
 def Signup(user_data: user, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     # 1. Check if user already exists BEFORE calling create_user

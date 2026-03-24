@@ -43,6 +43,12 @@ def authenticate_user(username : str , password:str , db:Session):
     if not current_user  or not bcrypt.verify( password, current_user.password ):
         raise HTTPException(status_code=400 , detail="user not found")
     return current_user
+def create_token(user_id:int , username  , exp : timedelta):
+    encode = {"id" : user_id , "sub" : username}
+    expire = datetime.now() + exp
+    encode.update({'exp':expire})
+    return jwt.encode(encode , Secret_Key , algorithm=alg)
+
 
 def create_user(user_data: user, db: Session):
     try:
