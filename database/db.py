@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 import os 
 
 load_dotenv()
-sql_path = os.getenv("sql_path")
-engine = create_engine(sql_path)
+sql_path2 = os.getenv("sql_path")
+print(sql_path2)
+engine = create_engine(sql_path2)
 SessionLocal = sessionmaker(autoflush=False , autocommit = False , bind= engine)
 Base = declarative_base()
 
