@@ -9,6 +9,8 @@ from database.Model.user import User
 from passlib.context import CryptContext
 from jose import jwt , JWTError
 from fastapi_mail import FastMail , MessageSchema , ConnectionConfig , MessageType
+import hashlib
+
 alg = "HS256"
 Secret_Key = "Shivam"
 bcrypt = CryptContext(schemes=['bcrypt'] , deprecated = 'auto')
@@ -37,36 +39,73 @@ async def send_welcome_email(email: str, username: str):
 
     fm = FastMail(config)
     await fm.send_message(message)
-def authenticate_user(username : str , password:str , db:Session):
+def authenticate_user(username: str, password: str, db: Session):
     current_user = db.query(User).filter(User.username == username).first()
-    
-    if not current_user  or not bcrypt.verify( password, current_user.password ):
-        raise HTTPException(status_code=400 , detail="user not found")
+
+    if not current_user:
+        return None
+
+    sha256_hash = hashlib.sha256(password.encode()).hexdigest()
+
+    if not bcrypt.verify(sha256_hash, current_user.password):
+        return None
+
     return current_user
+   
 def create_token(user_id:int , username  , exp : timedelta):
     encode = {"id" : user_id , "sub" : username}
     expire = datetime.now() + exp
     encode.update({'exp':expire})
     return jwt.encode(encode , Secret_Key , algorithm=alg)
 
-def create_user(user : user , db : Session):
- try :
-    new_user = User(
-        username = user.name,
-        email = user.email,
-        password = bcrypt.hash(user.password),
-        create_at = user.created_at
-   )
-    print("RAW PASSWORD:", user.password)
-    print("PASSWORD LENGTH:", len(user.password.encode("utf-8")))
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
- except Exception as e:
-        print(f"DATABASE ERROR: {str(e)}") # LOOK FOR THIS IN RENDER LOGS
-        db.rollback() # Always rollback on error to prevent idle transactions
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+def create_user(user_data: user, db: Session):
+    try:
+        # ✅ Normalize inputs
+        username = user_data.name.strip()
+        email = user_data.email.strip().lower()
+        password = user_data.password.strip()
+
+        # ✅ Validate password
+        if not password:
+            raise HTTPException(status_code=400, detail="Password cannot be empty")
+
+        if len(password.encode("utf-8")) > 72:
+            raise HTTPException(
+                status_code=400,
+                detail="Password too long (max 72 bytes)"
+            )
+
+        # ✅ Secure hashing (fix bcrypt limitation)
+        sha256_hash = hashlib.sha256(password.encode()).hexdigest()
+        hashed_password = bcrypt.hash(sha256_hash)
+
+        # ✅ Backend-controlled timestamp
+        new_user = User(
+            username=username,
+            email=email,
+            password=hashed_password,
+            create_at=datetime.now()
+        )
+
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+
+        return new_user
+
+    except HTTPException:
+        raise  # rethrow validation errors
+
+    except Exception as e:
+        print(f"DATABASE ERROR: {str(e)}")
+        db.rollback()
+
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error"
+        )
 
     
 def getcurrentuser(token  : Session = Depends(oauth2)):
