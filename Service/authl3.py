@@ -43,28 +43,31 @@ def authenticate_user(username : str , password:str , db:Session):
     if not current_user  or not bcrypt.verify( password, current_user.password ):
         raise HTTPException(status_code=400 , detail="user not found")
     return current_user
-def create_token(user_id:int , username  , exp : timedelta):
-    encode = {"id" : user_id , "sub" : username}
-    expire = datetime.now() + exp
-    encode.update({'exp':expire})
-    return jwt.encode(encode , Secret_Key , algorithm=alg)
 
-def create_user(user : user , db : Session):
- try :
-    new_user = User(
-        username = user.name,
-        email = user.email,
-        password = bcrypt.hash(user.password),
-        create_at = user.created_at
-   )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
- except Exception as e:
-        print(f"ERROR OCCURRED: {e}") # This WILL show up in Render logs
-        raise HTTPException(status_code=500, detail=str(e))
+def create_user(user_data: user, db: Session):
+    try:
+        # Explicitly convert to string to avoid bcrypt type-mismatch errors
+        plain_password = str(user_data.password)
+        hashed_password = bcrypt.hash(plain_password)
 
+        new_user = User(
+            username=user_data.name,
+            email=user_data.email,
+            password=hashed_password,
+            # Ensure 'create_at' exists in your SQLAlchemy Model
+            # If the model uses 'created_at', change it here!
+            create_at=user_data.created_at 
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        return new_user
+
+    except Exception as e:
+        db.rollback() # VERY IMPORTANT: Resets the connection for the next request
+        print(f"DATABASE ERROR: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Creation failed: {str(e)}")
     
 def getcurrentuser(token  : Session = Depends(oauth2)):
     
